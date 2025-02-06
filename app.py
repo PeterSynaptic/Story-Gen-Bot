@@ -54,12 +54,14 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- Load and display the logo ---
+# --- Load and display the logo (in a separate layout) ---
 try:
     logo = Image.open("logo.png")
-    st.image(logo, width=200)
+    col1, col2, col3 = st.columns([1, 3, 1])
+    with col2:
+        st.image(logo, width=200)
 except FileNotFoundError:
-    st.error("Logo image not found. Please ensure 'logo.png' is in the same directory.")
+    st.error("Logo image not found.")
 except Exception as e:
     st.error(f"Error loading logo: {e}")
 
