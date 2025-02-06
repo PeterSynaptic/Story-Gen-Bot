@@ -1,8 +1,66 @@
 import streamlit as st
 import google.generativeai as genai
+import time  # For simulating progress updates
 
-# Streamlit UI setup
-st.title("Story Generator")
+# --- UI Enhancements ---
+st.markdown(
+    """
+    <style>
+    .reportview-container .main .block-container {
+        max-width: 90%;  /* Adjust as needed */
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+    .stTextInput, .stNumberInput, .stSelectbox, .stTextArea {
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        padding: 0.5em;
+    }
+    .stButton>button {
+        color: white;
+        background-color: #007BFF; /* Example primary color */
+        border: none;
+        border-radius: 8px;
+        padding: 0.75em 1.5em;
+        font-size: 1rem;
+        cursor: pointer;
+    }
+    .stButton>button:hover {
+        background-color: #0056b3;
+    }
+    .generated-story {
+        background-color: #f0f2f6;
+        padding: 1em;
+        border-radius: 8px;
+    }
+    /* Improve header styling */
+    h1 {
+        color: #333;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    h3 {
+        color: #555;
+        font-size: 1.5rem;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    /* Add a subtle background gradient */
+    body {
+        background: linear-gradient(to bottom, #ffffff, #f8f8f8);
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Add a header image or logo (replace with your image URL or file)
+# st.image("your_logo.png", width=200)
+
+
+# --- Streamlit App ---
+st.title("CREATIVE STORY GENERATOR")
+st.markdown("Unleash your imagination!  Provide a seed, set a length, and let the AI weave a tale.")
 
 # Attempt to load API key from Streamlit secrets
 try:
@@ -10,19 +68,31 @@ try:
     genai.configure(api_key=api_key)
 except KeyError:
     st.error("API Key not found in Streamlit Secrets. Please configure it in `.streamlit/secrets.toml`.")
-    st.stop() # Halt execution if the API key is missing
+    st.stop()  # Halt execution if the API key is missing
 except Exception as e:
     st.error(f"Error configuring API: {e}")
     st.stop()
 
-# Input fields for seed and length
-seed_text = st.text_area("Enter your story seed:", "A lone astronaut drifted through space.")
-length = st.number_input("Enter the target length (words or characters):", min_value=10, max_value=5000, value=200)
-unit = st.selectbox("Select output unit:", ["words", "characters"])
 
-# Generate button
-if st.button("Generate Story"):
-    # Create the model
+# Input fields with better styling
+seed_text = st.text_area("Enter your story seed:", "A lone astronaut drifted through space...", height=150) # Adjusted height
+length = st.number_input("Target Length (words or characters):", min_value=10, max_value=5000, value=200)
+unit = st.selectbox("Output Unit:", ["words", "characters"])
+
+
+# --- Story Generation ---
+if st.button("Generate Story!"):
+
+    # Create a progress bar
+    progress_bar = st.progress(0)
+
+    # Simulate the story generation process with time.sleep()
+    # (Replace with your actual story generation code)
+    for i in range(10):
+        time.sleep(0.2)  # Simulate processing time
+        progress_bar.progress((i + 1) * 10)
+
+    # Define the generation config.
     generation_config = {
         "temperature": 1,
         "top_p": 0.95,
@@ -31,6 +101,7 @@ if st.button("Generate Story"):
         "response_mime_type": "text/plain",
     }
 
+    # Instantiate the Model
     model = genai.GenerativeModel(
         model_name="gemini-1.5-pro",
         generation_config=generation_config,
@@ -75,8 +146,15 @@ if st.button("Generate Story"):
 
     try:
         response = st.session_state.chat_session.send_message(prompt)
-        st.subheader("Generated Story:")
-        st.write(response.text)
+        st.subheader("✨ Your Story: ✨")
+        st.markdown(f"<div class='generated-story'>{response.text}</div>", unsafe_allow_html=True) #Styled container
 
     except Exception as e:
         st.error(f"Error generating story: {e}")
+
+    progress_bar.empty()  # Remove progress bar when done
+    st.success("Story generated successfully!")
+
+# --- Footer ---
+st.markdown("---")
+st.markdown("<p style='text-align: center; font-size: small;'>© 2025 PeterSynaptic. All rights reserved.</p>", unsafe_allow_html=True)
