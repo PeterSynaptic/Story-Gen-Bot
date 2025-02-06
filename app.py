@@ -1,13 +1,15 @@
 import streamlit as st
+from PIL import Image
+import io  # For creating in-memory file objects
 import google.generativeai as genai
-import time  # For simulating progress updates
+import time
 
 # --- UI Enhancements ---
 st.markdown(
     """
     <style>
     .reportview-container .main .block-container {
-        max-width: 90%;  /* Adjust as needed */
+        max-width: 90%;
         padding-top: 2rem;
         padding-bottom: 2rem;
     }
@@ -18,7 +20,7 @@ st.markdown(
     }
     .stButton>button {
         color: white;
-        background-color: #007BFF; /* Example primary color */
+        background-color: #007BFF;
         border: none;
         border-radius: 8px;
         padding: 0.75em 1.5em;
@@ -33,7 +35,6 @@ st.markdown(
         padding: 1em;
         border-radius: 8px;
     }
-    /* Improve header styling */
     h1 {
         color: #333;
         font-size: 2.5rem;
@@ -45,7 +46,6 @@ st.markdown(
         margin-top: 1rem;
         margin-bottom: 0.5rem;
     }
-    /* Add a subtle background gradient */
     body {
         background: linear-gradient(to bottom, #ffffff, #f8f8f8);
     }
@@ -54,45 +54,48 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Add a header image or logo (replace with your image URL or file)
-# st.image("your_logo.png", width=200)
-
+# --- Load and display the logo ---
+try:
+    logo = Image.open("logo.png")
+    st.image(logo, width=200)
+except FileNotFoundError:
+    st.error("Logo image not found. Please ensure 'logo.png' is in the same directory.")
+except Exception as e:
+    st.error(f"Error loading logo: {e}")
 
 # --- Streamlit App ---
 st.title("CREATIVE STORY GENERATOR")
-st.markdown("Unleash your imagination!  Provide a seed, set a length, and let the AI weave a tale.")
+st.markdown("Unleash your imagination! Provide a seed, set a length, and let the AI weave a tale.")
 
-# Attempt to load API key from Streamlit secrets
+# API key loading and configuration
 try:
     api_key = st.secrets["GOOGLE_API_KEY"]
     genai.configure(api_key=api_key)
 except KeyError:
     st.error("API Key not found in Streamlit Secrets. Please configure it in `.streamlit/secrets.toml`.")
-    st.stop()  # Halt execution if the API key is missing
+    st.stop()
 except Exception as e:
     st.error(f"Error configuring API: {e}")
     st.stop()
 
-
-# Input fields with better styling
-seed_text = st.text_area("Enter your story seed:", "A lone astronaut drifted through space...", height=150) # Adjusted height
+# Input fields
+seed_text = st.text_area("Enter your story seed:", "A lone astronaut drifted through space...", height=150)
 length = st.number_input("Target Length (words or characters):", min_value=10, max_value=5000, value=200)
 unit = st.selectbox("Output Unit:", ["words", "characters"])
 
 
+# Initialize session state for the generated story
+if 'generated_story' not in st.session_state:
+    st.session_state['generated_story'] = ""
+
+
 # --- Story Generation ---
 if st.button("Generate Story!"):
-
-    # Create a progress bar
     progress_bar = st.progress(0)
-
-    # Simulate the story generation process with time.sleep()
-    # (Replace with your actual story generation code)
     for i in range(10):
-        time.sleep(0.2)  # Simulate processing time
+        time.sleep(0.2)
         progress_bar.progress((i + 1) * 10)
 
-    # Define the generation config.
     generation_config = {
         "temperature": 1,
         "top_p": 0.95,
@@ -101,20 +104,18 @@ if st.button("Generate Story!"):
         "response_mime_type": "text/plain",
     }
 
-    # Instantiate the Model
     model = genai.GenerativeModel(
         model_name="gemini-1.5-pro",
         generation_config=generation_config,
     )
 
-    # Start or resume the chat session
     if 'chat_session' not in st.session_state:
         st.session_state.chat_session = model.start_chat(
             history=[
                 {
                     "role": "user",
                     "parts": [
-                        "Story Generation Task\n\nTask: Generate a short story given initial seed text and a target length (in words or characters).\n\nInput: A text string (the story seed) and a number (the target length).  Optionally, specify the desired output unit (words or characters).\n\nOutput: A generated story based on the seed, aiming for the specified length.  The output should be one or more paragraphs of coherent text that builds upon the seed.\n\nExamples:\n\nInput:\nSeed: The Three Little Pigs Incident\nLength: 200 words\n\nOutput:\nThe Three Little Pigs Incident: A Building Inspector’s Report\n\nBy B.B. Wolf, Senior Building Inspector, Woodland District Code Enforcement Division\n\nLet me set the record straight. After twenty-seven years with the Woodland Building Department (WBD), I’ve seen every construction shortcut and code violation imaginable. But nothing—and I mean nothing—compares to the infamous Three Pigs incident of 2023. The media had a field day with it, of course. “Big Bad Wolf Terrorizes Innocent Homeowners!” Please. I enforced the International Building Code, 2021 Edition, with local woodland amendments.\n\nIt all started with an anonymous tip to our department’s compliance hotline. The caller, who I would later discover was a rather fastidious beaver from upstream, reported unauthorized construction activities in the Lower Woods district. Three new structures had appeared virtually overnight, with no posted permits, architectural drawings, and highly questionable materials. As the senior inspector for Zone 4, the case landed on my desk.  I looked over our records first, following the protocol. No building permit applications. No site plans. No structural calculations. No soil testing reports. In a designated high-wind zone with seasonal flooding concerns, this was more than just negligent—it was dangerous.  I had to act.\n\nInput:\nSeed: A lone astronaut drifted through space.\nLength: 150 characters\n\nOutput:\nA lone astronaut drifted through space.  His oxygen tanks were low, his comms dead.  Stars blurred into streaks as he tumbled, a tiny speck lost in the vast cosmic ocean.  Hope dwindled with each passing second, replaced by the cold certainty of the void.\n\n\nThe output should not have any code in them and should be a story that is well understood",
+                        "Story Generation Task\n\nTask: Generate a short story given initial seed text and a target length (in words or characters).\n\nInput: A text string (the story seed) and a number (the target length).  Optionally, specify the desired output unit (words or characters).\n\nOutput: A generated story based on the seed, aiming for the specified length.  The output should be one or more paragraphs of coherent text that builds upon the seed.\n\nExamples:\n\nInput:\nSeed: The Three Little Pigs Incident\nLength: 200 words\n\nOutput:\nThe Three Little Pigs Incident: A Building Inspector’s Report\n\nBy B.B. Wolf, Senior Building Inspector, Woodland District Code Enforcement Division\n\nLet me set me straight. After twenty-seven years with the Woodland Building Department (WBD), I’ve seen every construction shortcut and code violation imaginable. But nothing—and I mean nothing—compares to the infamous Three Pigs incident of 2023. The media had a field day with it, of course. “Big Bad Wolf Terrorizes Innocent Homeowners!” Please. I enforced the International Building Code, 2021 Edition, with local woodland amendments.\n\nIt all started with an anonymous tip to our department’s compliance hotline. The caller, who I would later discover was a rather fastidious beaver from upstream, reported unauthorized construction activities in the Lower Woods district. Three new structures had appeared virtually overnight, with no posted permits, architectural drawings, and highly questionable materials. As the senior inspector for Zone 4, the case landed on my desk.  I looked over our records first, following the protocol. No building permit applications. No site plans. No structural calculations. No soil testing reports. In a designated high-wind zone with seasonal flooding concerns, this was more than just negligent—it was dangerous.  I had to act.\n\nInput:\nSeed: A lone astronaut drifted through space.\nLength: 150 characters\n\nOutput:\nA lone astronaut drifted through space.  His oxygen tanks were low, his comms dead.  Stars blurred into streaks as he tumbled, a tiny speck lost in the vast cosmic ocean.  Hope dwindled with each passing second, replaced by the cold certainty of the void.\n\n\nThe output should not have any code in them and should be a story that is well understood",
                     ],
                 },
                 {
@@ -138,23 +139,43 @@ if st.button("Generate Story!"):
             ]
         )
     else:
-        # Resume the existing session
         pass
 
-    # Construct the prompt
     prompt = f"{seed_text}\nLength: {length} {unit}"
 
     try:
         response = st.session_state.chat_session.send_message(prompt)
-        st.subheader("✨ Your Story: ✨")
-        st.markdown(f"<div class='generated-story'>{response.text}</div>", unsafe_allow_html=True) #Styled container
+        st.session_state['generated_story'] = response.text  # Store the generated story in session state
 
     except Exception as e:
         st.error(f"Error generating story: {e}")
+        st.session_state['generated_story'] = ""  # Clear the stored story on error
 
-    progress_bar.empty()  # Remove progress bar when done
+    progress_bar.empty()
     st.success("Story generated successfully!")
 
-# --- Footer ---
+# Display the story if it exists
+if st.session_state['generated_story']:
+    st.subheader("✨ Your Story: ✨")
+    st.markdown(f"<div class='generated-story'>{st.session_state['generated_story']}</div>", unsafe_allow_html=True)
+
+    # --- Download Button ---
+    story_bytes = st.session_state['generated_story'].encode()
+    file_name = "generated_story.txt"  # Default file name
+    st.download_button(
+        label="⬇️ Download Story",
+        data=story_bytes,
+        file_name=file_name,
+        mime="text/plain",
+    )
+
+# --- Reset Button ---
+if st.button("🔄 Clear Story"):
+    st.session_state['generated_story'] = ""
+    st.info("Story has been cleared.") #informational message
+    # Optional: Clear the chat session as well
+    # if 'chat_session' in st.session_state:
+    #     del st.session_state['chat_session']
+
 st.markdown("---")
 st.markdown("<p style='text-align: center; font-size: small;'>© 2025 PeterSynaptic. All rights reserved.</p>", unsafe_allow_html=True)
