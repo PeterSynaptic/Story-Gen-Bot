@@ -149,7 +149,7 @@ if st.button("Generate Story!"):
         prompt = f"Genre: {genre}. {seed_text}\nLength: {length} {unit}"
 
         try:
-            response = st.session_state.chat_session.time.send_message(prompt)
+            response = st.session_state.chat_session.send_message(prompt)
             st.session_state['generated_story'] = response.text
 
         except Exception as e:
