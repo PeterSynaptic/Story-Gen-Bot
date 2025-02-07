@@ -103,9 +103,9 @@ if st.button("Generate Story!"):
     with st.spinner("Generating story..."):
         generation_config = {
             "temperature": 1,
-            "top_p": 0.95,
-            "top_k": 40,
-            "max_output_tokens": 5192,
+            "top_p": 0.8,
+            "top_k": 50,
+            "max_output_tokens": 2000,
             "response_mime_type": "text/plain",
         }
 
@@ -149,7 +149,7 @@ if st.button("Generate Story!"):
         prompt = f"Genre: {genre}. {seed_text}\nLength: {length} {unit}"
 
         try:
-            response = st.session_state.chat_session.send_message(prompt)
+            response = model.generate_content(prompt)
             st.session_state['generated_story'] = response.text
 
         except Exception as e:
@@ -161,7 +161,7 @@ if st.button("Generate Story!"):
 # Display the story if it exists
 if st.session_state['generated_story']:
     st.subheader("✨ Your Story: ✨")
-    st.markdown(f"<div class='generated-story'>{st.session_state['generated_story']}</div>", unsafe_allow_html=True)
+    st.write(st.session_state['generated_story'])
 
     # --- Download Button (DOCX) ---
     def create_docx(text):
