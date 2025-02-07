@@ -19,7 +19,7 @@ st.markdown(
         border: 1px solid #ccc;
         padding: 10px;
         border-radius: 5px;
-        background-color: #f0f0f0;
+        background-color: #white;
         margin-bottom: 10px;
     }
 
