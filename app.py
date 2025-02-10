@@ -90,7 +90,7 @@ length = st.number_input("Target Length (words or characters):", min_value=10, m
 unit = st.selectbox("Output Unit:", ["words", "characters"])
 genre = st.selectbox(
     "Choose a Genre:",
-    ["Sci-Fi", "Fantasy", "Horror", "Romance", "Mystery", "Comedy", "Crime", "Musical", "War", "Sport", "Action", "Documentary", "Kids"]
+    ["None", "Sci-Fi", "Fantasy", "Horror", "Romance", "Mystery", "Comedy", "Crime", "Musical", "War", "Sport", "Action", "Documentary", "Kids"]
 )
 
 # Initialize session state for the generated story
